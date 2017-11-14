@@ -6,3 +6,5 @@ This repo contains my analysis of Simpsons episode and script data from the firs
 My best and final model was a random forest classifier which I then used to create a prediction app. The app allows users to see how changing one variable affects the prediction while holding other values constant. Download all files and run ```python simpsons_imbd_predictor_app.py``` to load the app in your local browser.
 
 Check out [my blog](https://lauraehoward.weebly.com/blog/the-good-the-bad-and-the-meh-classifying-the-simpsons-episode-quality) on this project if you're interested in learning more!
+
+![App Screenshot](static/app_screenshot.png)
