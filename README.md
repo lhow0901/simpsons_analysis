@@ -7,6 +7,4 @@ My best and final model was a random forest classifier which I then used to crea
 
 Check out [my blog](https://lauraehoward.weebly.com/blog/the-good-the-bad-and-the-meh-classifying-the-simpsons-episode-quality) on this project if you're interested in learning more!
 
-<p align="center">
-  ![App Screenshot](static/app_screenshot.png)
-</p>
+![App Screenshot](static/app_screenshot.png)
