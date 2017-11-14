@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Simpsons IMBD Rating Predictor</title>
+    <link rel="stylesheet" href="static/d3.slider.css" />
+    <style>
+
+     body {
+       font-family: Verdana,Arial,sans-serif;
+     }
+
+
+
+     h2 {
+       font-size: 1.2em;
+       margin: 60px 0 5px 0;
+       color: gray;
+     }
+
+     .space {
+       margin-bottom: 20 px;
+     }
+
+     .wrapper {
+       width: 800px;
+       margin-left: auto;
+       margin-right: auto;
+       margin-bottom: 0px;
+     }
+
+     #bar_chart {
+       margin-bottom: 0 px;
+     }
+
+     .bar {
+       fill: #2359F1;
+     }
+
+     span {
+       color: #2359F1;
+     }
+
+
+     #homer_slider a {
+       width: 80px;
+       height: 64px;
+       border: 0;
+       background: url('static/homer.png');
+       background-repeat: no-repeat;
+       margin-left: -1.8em;
+     }
+
+     #marge_slider a {
+       width: 55px;
+       height: 85px;
+       border: 0;
+       background: url('static/marge.png');
+       background-repeat: no-repeat;
+       margin-left: -1.6em;
+     }
+
+     #bart_slider a {
+       width: 55px;
+       height: 85px;
+       border: 0;
+       background: url('static/bart.png');
+       background-repeat: no-repeat;
+       margin-left: -1.6em;
+     }
+
+     #lisa_slider a {
+       width: 55px;
+       height: 85px;
+       border: 0;
+       background: url('static/lisa.png');
+       background-repeat: no-repeat;
+       margin-left: -1.6em;
+     }
+
+     #simpsons_home_slider a {
+       width: 85px;
+       height: 60px;
+       border: 0;
+       background: url('static/simpsons_home.png');
+       background-repeat: no-repeat;
+       margin-left: -1.8em;
+     }
+
+     #moes_tavern_slider a {
+       width: 80px;
+       height: 70px;
+       border: 0;
+       background: url('static/moes_tavern.png');
+       background-repeat: no-repeat;
+       margin-left: -1.8em;
+     }
+
+     #bannerimage {
+     background-image: url('/static/simspons-charcters.jpg');
+     width: 778px;
+     height: 215px;
+     margin: auto;
+
+}
+
+
+    </style>
+  </head>
+
+  <body>
+
+    <div id="bannerimage"></div>
+
+
+    <div id="chart_area" class="wrapper">
+      <h2>Simpson Episode IMBD Rating Prediction</h2>
+      <p class="space"></p>
+      <div id="bar_chart">
+      </div>
+    </div>
+
+    <div id="sliders" class="wrapper">
+
+      <h2 class="feature">Season: <span id="season">17</span></h2>
+      <div id="season_slider"></div>
+
+      <h2 class="feature">Number of characters: <span id="num_characters">52</span></h2>
+      <div id="num_characters_slider"></div>
+
+      <h2 class="feature">Talking Time in Minutes: <span id="talking_time">13.3</span></h2>
+      <div id="talking_time_slider"></div>
+
+      <h2 class="feature">Famous Guest Star: <span id="guest_star">0</span></h2>
+      <div id="guest_star_slider"></div>
+
+      <h2 class="feature">Homer Talking Ratio: <span id="homer">.16</span></h2>
+      <div id="homer_slider"></div>
+
+      <h2 class="feature">Marge Talking Ratio: <span id="marge">.08</span></h2>
+      <div id="marge_slider"></div>
+
+      <h2 class="feature">Lisa Talking Ratio: <span id="lisa">.05</span></h2>
+      <div id="lisa_slider"></div>
+
+      <h2 class="feature">Bart Talking Ratio: <span id="bart">.09</span></h2>
+      <div id="bart_slider"></div>
+
+      <h2 class="feature">Percent of Time Spent at Simpson's House: <span id="simpsons_home">.32</span></h2>
+      <div id="simpsons_home_slider"></div>
+
+      <h2 class="feature">Percent of Time Spent at Moe's Tavern: <span id="moes_tavern">.0</span></h2>
+      <div id="moes_tavern_slider"></div>
+
+    </div>
+
+    <!-- Import the libraries: jQuery, d3, d3.slider -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="static/d3.slider.js"></script>
+
+    <script>
+
+     <!-- SINGLE BAR CHART -->
+
+     var current_season = 17;
+     var current_num_characters = 52;
+     var current_talking_time = 13.3;
+     var current_guest_star = 0;
+     var current_homer = .16;
+     var current_marge = .08;
+     var current_lisa = .05;
+     var current_bart  = .09;
+     var current_simpsons_home = .32;
+     var current_moes_tavern = .0;
+     var prob_low = 3.4
+     var prob_med = 72.7
+     var prob_high = 23.9;
+
+     var chart = d3.select("#bar_chart")
+                   .append("svg:svg")
+                   .attr("width", 800)
+                   .attr("height", 170);
+
+     var chance_scale = d3.scale.linear()
+                                .domain([0, 100])
+                                .range([0, 800]);
+
+
+     var bar = chart.append("g")
+                    .attr("class", "bar")
+
+       bar.append("svg:rect")
+          .attr("id", "chancebar1")
+          .attr("class", "bar")
+          .attr("width", chance_scale(prob_low))
+          .attr("height", 50);
+
+     bar.append("text")
+        .attr("id", "percent_text1")
+        .attr("dy", ".75em")
+        .attr("y", 15)
+        .attr("x", chance_scale(prob_low-5))
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", 20)
+        .text( prob_low.toFixed(1) + "%");
+
+        bar.append("text")
+           .attr("id", "label1")
+           .attr("dy", ".75em")
+           .attr("y", 15)
+           .attr("x", 780)
+           .attr("text-anchor", "middle")
+           .attr("fill", "red")
+           .attr("font-size", 20)
+           .text( "Low");
+
+        bar.append("svg:rect")
+           .attr("id", "chancebar2")
+           .attr("class", "bar")
+           .attr("width", chance_scale(prob_med))
+           .attr("height", 50)
+           .attr("y", 60);
+
+       bar.append("text")
+          .attr("id", "percent_text2")
+          .attr("dy", ".75em")
+          .attr("y", 75)
+          .attr("x", chance_scale(prob_med-5))
+          .attr("text-anchor", "middle")
+          .attr("fill", "white")
+          .attr("font-size", 20)
+          .text( prob_med.toFixed(1) + "%");
+
+          bar.append("text")
+             .attr("id", "label2")
+             .attr("dy", ".75em")
+             .attr("y", 75)
+             .attr("x", 760)
+             .attr("text-anchor", "middle")
+             .attr("fill", "orange")
+             .attr("font-size", 20)
+             .text( "Medium");
+
+       bar.append("svg:rect")
+          .attr("id", "chancebar3")
+          .attr("class", "bar")
+          .attr("width", chance_scale(prob_high))
+          .attr("height", 50)
+          .attr("y", 120);
+
+      bar.append("text")
+         .attr("id", "percent_text3")
+         .attr("dy", ".75em")
+         .attr("y", 135)
+         .attr("x", chance_scale(prob_high-5))
+         .attr("text-anchor", "middle")
+         .attr("fill", "white")
+         .attr("font-size", 20)
+         .text( prob_high.toFixed(1) + "%");
+
+       bar.append("text")
+          .attr("id", "label3")
+          .attr("dy", ".75em")
+          .attr("y", 135)
+          .attr("x", 775)
+          .attr("text-anchor", "middle")
+          .attr("fill", "green")
+          .attr("font-size", 20)
+          .text( "High");
+
+     <!-- FUNCTION TO GET CHANCE FROM YOUR PREDICTOR WITH AJAX AND CHANGE BAR  HEIGHT -->
+     function getAndDrawChance(season, num_characters, talking_time, guest_star, homer, marge, lisa, bart, simpsons_home, moes_tavern){
+
+       $.ajax({
+         type: "POST",
+         contentType: "application/json; charset=utf-8",
+         url: "/score",
+         dataType: "json",
+         async: true,
+         data: "{\"example\": ["+season+","+num_characters+","+talking_time+", "+guest_star+", "+homer+", "+marge+","+lisa+", "+bart+", "+simpsons_home+", "+moes_tavern+"]}",
+         success: function (data) {
+           var chance1 = 100 * data["low"];
+           var chance2 = 100 * data["med"];
+           var chance3 = 100 * data["high"];
+           d3.select("#chancebar1")
+             .attr("width", chance_scale(chance1));
+           d3.select("#percent_text1")
+             .attr("x", chance_scale(chance1-5))
+             .text(chance1.toFixed(1) + "%");
+           d3.select("#chancebar2")
+             .attr("width", chance_scale(chance2));
+           d3.select("#percent_text2")
+             .attr("x", chance_scale(chance2-5))
+             .text(chance2.toFixed(1) + "%");
+           d3.select("#chancebar3")
+             .attr("width", chance_scale(chance3));
+           d3.select("#percent_text3")
+             .attr("x", chance_scale(chance3-5))
+             .text(chance3.toFixed(1) + "%");
+         },
+         error: function (result) {
+         }
+       })
+     }
+
+
+     <!-- SLIDERS -->
+
+     d3.select('#season_slider')
+       .call(
+         d3.slider()
+           .value(current_season)
+           .min(1)
+           .max(29)
+           .step(1)
+           .axis(true)
+           .on("slide", function(evt,value) {
+             d3.select('#season').text(value);
+             current_season = value;
+             getAndDrawChance(current_season, current_num_characters, current_talking_time, current_guest_star,
+               current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+           }
+           )
+       );
+
+     d3.select('#num_characters_slider')
+       .call(
+         d3.slider()
+           .value(current_num_characters)
+           .min(10)
+           .max(70)
+           .step(1)
+           .axis(true)
+           .on("slide", function(evt,value) {
+             d3.select('#num_characters').text(value);
+             current_num_characters = value;
+             getAndDrawChance(current_season, current_num_characters, current_talking_time, current_guest_star,
+               current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+           }
+           )
+       );
+
+     d3.select('#talking_time_slider')
+       .call(
+         d3.slider()
+           .value(current_talking_time)
+           .min(10)
+           .max(20)
+           .step(.5)
+           .axis(true)
+           .on("slide", function(evt,value) {
+             d3.select('#talking_time').text(value.toFixed(1));
+             current_talking_time = value;
+             getAndDrawChance(current_season, current_num_characters, current_talking_time, current_guest_star,
+               current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+           }
+           )
+       );
+
+       d3.select('#guest_star_slider')
+         .call(
+           d3.slider()
+             .value(current_guest_star)
+             .min(0)
+             .max(1)
+             .step(1)
+             .axis("yes_no")
+             .on("slide", function(evt,value) {
+               d3.select('#guest_star').text(value);
+               current_guest_star = value;
+               getAndDrawChance(current_season, current_num_characters, current_talking_time, current_guest_star,
+                 current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+             }
+             )
+         );
+
+         d3.select('#homer_slider')
+           .call(
+             d3.slider()
+               .value(current_homer)
+               .min(0)
+               .max(1)
+               .step(.05)
+               .axis(true)
+               .on("slide", function(evt,value) {
+                 d3.select('#homer').text(value.toFixed(2));
+                 current_homer = value;
+                 getAndDrawChance(current_season, current_num_characters, current_talking_time, current_num_characters,
+                   current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+               }
+               )
+           );
+
+           d3.select('#marge_slider')
+             .call(
+               d3.slider()
+                 .value(current_marge)
+                 .min(0)
+                 .max(1)
+                 .step(.05)
+                 .axis(true)
+                 .on("slide", function(evt,value) {
+                   d3.select('#marge').text(value.toFixed(2));
+                   current_marge = value;
+                   getAndDrawChance(current_season, current_num_characters, current_talking_time, current_num_characters,
+                     current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+                 }
+                 )
+             );
+
+             d3.select('#lisa_slider')
+               .call(
+                 d3.slider()
+                   .value(current_lisa)
+                   .min(0)
+                   .max(1)
+                   .step(.05)
+                   .axis(true)
+                   .on("slide", function(evt,value) {
+                     d3.select('#lisa').text(value.toFixed(2));
+                     current_lisa = value;
+                     getAndDrawChance(current_season, current_num_characters, current_talking_time, current_num_characters,
+                       current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+                   }
+                   )
+               );
+
+               d3.select('#bart_slider')
+                 .call(
+                   d3.slider()
+                     .value(current_bart)
+                     .min(0)
+                     .max(1)
+                     .step(.05)
+                     .axis(true)
+                     .on("slide", function(evt,value) {
+                       d3.select('#bart').text(value.toFixed(2));
+                       current_bart = value;
+                       getAndDrawChance(current_season, current_num_characters, current_talking_time, current_num_characters,
+                         current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+                     }
+                     )
+                 );
+
+                 d3.select('#simpsons_home_slider')
+                   .call(
+                     d3.slider()
+                       .value(current_simpsons_home)
+                       .min(0)
+                       .max(.5)
+                       .step(.05)
+                       .axis(true)
+                       .on("slide", function(evt,value) {
+                         d3.select('#simpsons_home').text(value.toFixed(2));
+                         current_simpsons_home = value;
+                         getAndDrawChance(current_season, current_num_characters, current_talking_time, current_num_characters,
+                           current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+                       }
+                       )
+                   );
+
+                   d3.select('#moes_tavern_slider')
+                     .call(
+                       d3.slider()
+                         .value(current_moes_tavern)
+                         .min(0)
+                         .max(.5)
+                         .step(.05)
+                         .axis(true)
+                         .on("slide", function(evt,value) {
+                           d3.select('#moes_tavern').text(value.toFixed(2));
+                           current_moes_tavern = value;
+                           getAndDrawChance(current_season, current_num_characters, current_talking_time, current_num_characters,
+                             current_homer, current_marge, current_lisa, current_bart, current_simpsons_home, current_moes_tavern)
+                         }
+                         )
+                     );
+
+
+
+    </script>
+  </body>
+</html>
